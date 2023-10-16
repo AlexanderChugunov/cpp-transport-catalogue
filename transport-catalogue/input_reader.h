@@ -32,11 +32,11 @@ namespace transport_catalogue {
 
             std::pair<std::string_view, std::string_view> ParseCoordinates(std::string_view latitude, std::string_view longitude);
 
-            std::vector<std::string_view> ParseBuses(std::vector<std::string_view> vec_input);
+            std::vector<std::string_view> ParseBuses(const std::vector<std::string_view> vec_input);
 
-            std::vector<std::pair<std::string_view, std::string_view>> ParseDistances(std::vector<std::string_view> vec_input);
+            std::vector<std::pair<std::string_view, std::string_view>> ParseDistances(const std::vector<std::string_view> vec_input);
 
-            void ParseCommandString(std::string input);
+            void ParseCommandString(const std::string input);
 
         };
 
