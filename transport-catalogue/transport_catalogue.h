@@ -57,7 +57,7 @@ namespace transport_catalogue {
     public:
         void AddStop(std::string_view name, double latitude, double longitude);
 
-        void AddBus(std::string_view number, RouteType type, std::vector<std::string_view> stops);
+        void AddBus(std::string_view number, RouteType type, const std::vector<std::string_view> stops);
 
         BusPtr FindBus(std::string_view name);
 
