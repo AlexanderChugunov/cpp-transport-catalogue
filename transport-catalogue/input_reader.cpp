@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 using namespace std;
-
+int QUERY_COUNT;
 namespace transport_catalogue {
 
 namespace query {
@@ -49,10 +49,10 @@ pair<string_view, string_view> Command::ParseCoordinates(string_view latitude, s
     return make_pair(latitude, longitude);
 }
 
-vector<pair<string_view, string_view>> Command::ParseDistances(vector<string_view> vec_input) {
+vector<pair<string_view, string_view>> Command::ParseDistances(const vector<string_view> const_vec_input) {
     vector<pair<string_view, string_view>> result;
     size_t i = 2;
-
+    vector<string_view> vec_input = const_vec_input;
     while (i < vec_input.size()) {
         while (vec_input[i].front() == ' ') {
             vec_input[i].remove_prefix(1);
@@ -79,7 +79,7 @@ vector<pair<string_view, string_view>> Command::ParseDistances(vector<string_vie
     return result;
 }
 
-vector<string_view> Command::ParseBuses(vector<string_view> vec_input) {
+vector<string_view> Command::ParseBuses(const vector<string_view> vec_input) {
     vector<string_view> result;
     vector<string_view> parsed_buses;
 
@@ -109,7 +109,7 @@ vector<string_view> Command::ParseBuses(vector<string_view> vec_input) {
     return result;
 }
 
-void Command::ParseCommandString(string input) {
+void Command::ParseCommandString(const string input) {
     static std::unordered_map<std::string, QueryType> const table = {
         {"Stop", QueryType::StopX}, {"Bus", QueryType::BusX}
     };
@@ -188,12 +188,12 @@ void Command::ParseCommandString(string input) {
 }
 
 void InputReader::ParseInput() {
-    int query_count;
-    cin >> query_count;
+    
+    cin >> QUERY_COUNT;
     cin.ignore();
     string command;
 
-    for (int i = 0; i < query_count; ++i) {
+    for (int i = 0; i < QUERY_COUNT; ++i) {
         getline(cin, command);
         Command cur_command;
         cur_command.ParseCommandString(move(command));
