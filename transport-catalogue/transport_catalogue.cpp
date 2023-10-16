@@ -11,7 +11,7 @@ namespace transport_catalogue {
         stop_by_name_[stops_.back().name] = &stops_.back();
     }
 
-    void TransportCatalogue::AddBus(string_view number, RouteType type, std::vector<std::string_view> stops) {
+    void TransportCatalogue::AddBus(string_view number, RouteType type, const std::vector<std::string_view> stops) {
         Bus result;
         result.number = { number.begin(), number.end() };
 
@@ -113,4 +113,4 @@ namespace transport_catalogue {
         return statistics;
     }
 
-}//namespace transport_catalogue
+}
