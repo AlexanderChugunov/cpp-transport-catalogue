@@ -11,7 +11,7 @@ namespace transport_catalogue {
         stop_by_name_[stops_.back().name] = &stops_.back();
     }
 
-    void TransportCatalogue::AddBus(string_view number, RouteType type, const std::vector<std::string_view> stops) {
+    void TransportCatalogue::AddBus(string_view number, RouteType type, const std::vector<std::string_view>& stops) {
         Bus result;
         result.number = { number.begin(), number.end() };
 
@@ -105,10 +105,10 @@ namespace transport_catalogue {
         statistics.unique_stops = temp.size();
 
         for (size_t i = 0; i < bus->stops.size() - 1; ++i) {
-            statistics.real_distance += ComputeDistance(bus->stops[i]->coordinates, bus->stops[i + 1]->coordinates);
-            
+            statistics.distance += ComputeDistance(bus->stops[i]->coordinates, bus->stops[i + 1]->coordinates);
+            statistics.real_distance += GetStopDistance(bus->stops[i], bus->stops[i + 1]);
         }
-        statistics.curvature =  statistics.distance;
+        statistics.curvature = statistics.real_distance / statistics.distance;
 
         return statistics;
     }
