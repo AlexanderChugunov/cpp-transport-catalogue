@@ -6,6 +6,8 @@
 
 using namespace std;
 int QUERY_COUNT;
+
+
 namespace transport_catalogue {
 
 namespace query {
@@ -13,7 +15,7 @@ namespace query {
 inline std::vector<std::string_view> Split(std::string_view command, char c) {
     std::vector<std::string_view> result;
     int pos = 0;
-    const int pos_end = command.npos;
+    const int64_t pos_end = command.npos;
 
     while (true) {
         int distance = command.find(c, pos);
@@ -49,7 +51,7 @@ pair<string_view, string_view> Command::ParseCoordinates(string_view latitude, s
     return make_pair(latitude, longitude);
 }
 
-vector<pair<string_view, string_view>> Command::ParseDistances(const vector<string_view> const_vec_input) {
+vector<pair<string_view, string_view>> Command::ParseDistances(const vector<string_view>& const_vec_input) {
     vector<pair<string_view, string_view>> result;
     size_t i = 2;
     vector<string_view> vec_input = const_vec_input;
@@ -79,7 +81,7 @@ vector<pair<string_view, string_view>> Command::ParseDistances(const vector<stri
     return result;
 }
 
-vector<string_view> Command::ParseBuses(const vector<string_view> vec_input) {
+vector<string_view> Command::ParseBuses(const vector<string_view>& vec_input) {
     vector<string_view> result;
     vector<string_view> parsed_buses;
 
@@ -109,7 +111,7 @@ vector<string_view> Command::ParseBuses(const vector<string_view> vec_input) {
     return result;
 }
 
-void Command::ParseCommandString(const string input) {
+void Command::ParseCommandString(const string& input) {
     static std::unordered_map<std::string, QueryType> const table = {
         {"Stop", QueryType::StopX}, {"Bus", QueryType::BusX}
     };
@@ -187,14 +189,14 @@ void Command::ParseCommandString(const string input) {
     }
 }
 
-void InputReader::ParseInput() {
-    
-    cin >> QUERY_COUNT;
-    cin.ignore();
+void InputReader::ParseInput(std::istream& input) {
+
+    input >> QUERY_COUNT;
+    input.ignore();
     string command;
 
     for (int i = 0; i < QUERY_COUNT; ++i) {
-        getline(cin, command);
+        getline(input, command);
         Command cur_command;
         cur_command.ParseCommandString(move(command));
         commands_.push_back(move(cur_command));
@@ -242,8 +244,9 @@ void InputReader::LoadCommand(TransportCatalogue& tc, Command com, bool dist) {
                     }
                 }
             }
-            else {
-                output::OutputStopAbout(tc, com.name);
+            //передача std::cout как выходного потока
+            else {                
+                output::OutputStopAbout(tc, com.name,std::cout);
             }
 
             break;
@@ -252,7 +255,7 @@ void InputReader::LoadCommand(TransportCatalogue& tc, Command com, bool dist) {
                 tc.AddBus(com.name, com.route_type, com.route);
             }
             else {
-                output::OutputRouteAbout(tc, com.name);
+                output::OutputRouteAbout(tc, com.name, std::cout);
             }
             break;
     }
