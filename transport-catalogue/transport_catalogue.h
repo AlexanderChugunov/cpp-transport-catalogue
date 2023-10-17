@@ -49,7 +49,7 @@ namespace transport_catalogue {
         size_t number_of_stops = 0;
         size_t unique_stops = 0;
         double distance = 0.;
-        double real_distance = 0;
+        uint64_t real_distance = 0;
         double curvature = 0.;
     };
 
@@ -57,7 +57,7 @@ namespace transport_catalogue {
     public:
         void AddStop(std::string_view name, double latitude, double longitude);
 
-        void AddBus(std::string_view number, RouteType type, const std::vector<std::string_view> stops);
+        void AddBus(std::string_view number, RouteType type, const std::vector<std::string_view>& stops);
 
         BusPtr FindBus(std::string_view name);
 
