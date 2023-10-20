@@ -91,10 +91,6 @@ namespace svg {
         double y = 0;
     };
 
-    /*
-        * Вспомогательная структура, хранящая контекст для вывода SVG-документа с отступами.
-        * Хранит ссылку на поток вывода, текущее значение и шаг отступа при выводе элемента
-        */
     struct RenderContext {
         RenderContext(std::ostream& out)
             : out(out) {
@@ -121,11 +117,6 @@ namespace svg {
         int indent = 0;
     };
 
-    /*
-        * Абстрактный базовый класс Object служит для унифицированного хранения
-        * конкретных тегов SVG-документа
-        * Реализует паттерн "Шаблонный метод" для вывода содержимого тега
-        */
     class Object {
     public:
         void Render(const RenderContext& context) const;
@@ -136,11 +127,6 @@ namespace svg {
         virtual void RenderObject(const RenderContext& context) const = 0;
     };
 
-    /*
-        * ObjectContainer задаёт интерфейс для доступа к контейнеру SVG-объектов.
-        * Через этот интерфейс Drawable-объекты могут визуализировать себя,
-        * добавляя в контейнер SVG-примитивы
-        */
     class ObjectContainer {
     public:
         template <typename T>
@@ -154,22 +140,13 @@ namespace svg {
         ~ObjectContainer() = default;
     };
 
-    /*
-        * Интерфейс Drawable унифицирует работу с объектами, которые можно нарисовать,
-        * подключив SVG-библиотеку. Для этого в нём есть метод Draw, принимающий ссылку
-        * на интерфейс ObjectContainer
-        */
+
     class Drawable {
     public:
         virtual ~Drawable() = default;
         virtual void Draw(ObjectContainer& container) const = 0;
     };
 
-    /*
-        * вспомогательный базовый класс svg::PathProps.
-        * Путь — представленный в виде последовательности различных контуров векторный объект,
-        * который будет содержать свойства, управляющие параметрами заливки и контура
-        */
     template <typename Owner>
     class PathProps {
     public:
