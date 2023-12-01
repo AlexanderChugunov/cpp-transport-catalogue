@@ -1,36 +1,68 @@
 #pragma once
-
-#include "json.h"
-#include "transport_catalogue.h"
-#include "map_renderer.h"
-#include "request_handler.h"
-
 #include <iostream>
-
-class JsonReader {
-public:
-    JsonReader(std::istream& input)
-        : input_(json::Load(input))
-    {}
-
-    const json::Node& GetBaseRequests() const;
-    const json::Node& GetStatRequests() const;
-    const json::Node& GetRenderSettings() const;
-
-    void ProcessRequests(const json::Node& stat_requests, RequestHandler& rh) const;
-
-    void FillCatalogue(transport::TransportCatalogue& catalogue);
-    renderer::MapRenderer FillRenderSettings(const json::Dict& request_map) const;
-
-    const json::Node PrintRoute(const json::Dict& request_map, RequestHandler& rh) const;
-    const json::Node PrintStop(const json::Dict& request_map, RequestHandler& rh) const;
-    const json::Node PrintMap(const json::Dict& request_map, RequestHandler& rh) const;
-
-private:
-    json::Document input_;
-    json::Node dummy_ = nullptr;
-
-    std::tuple<std::string_view, geo::Coordinates, std::map<std::string_view, int>> FillStop(const json::Dict& request_map) const;
-    void FillStopDistances(transport::TransportCatalogue& catalogue) const;
-    std::tuple<std::string_view, std::vector<const transport::Stop*>, bool> FillRoute(const json::Dict& request_map, transport::TransportCatalogue& catalogue) const;
+#include <sstream>
+#include <deque>
+#include <unordered_map>
+#include <string_view>
+#include <algorithm>
+#include <tuple>
+#include <iomanip>
+#include <deque>
+#include "transport_catalogue.h"
+#include "json.h"
+#include "map_renderer.h"
+#include "svg.h"
+#include "request_handler.h"
+enum class RequestType {
+    AddStop,
+    AddBus,
+	GetInfo,
+    GetBusInfo,
+    GetStopInfo,
+	GetMap
 };
+struct AddStopRequest
+{
+	std::string name;
+	geo::Coordinates coord;
+	json::Dict stops_around;
+
+};
+struct AddBusRequest
+{
+	std::string name;
+	json::Array route;
+	bool is_loop;
+};
+
+struct GetInfo{
+	RequestType type;
+	int id;
+	
+	std::string name;
+};
+
+
+using RequestMap = std::map<RequestType, std::vector<std::variant<AddStopRequest, AddBusRequest, GetInfo>>>;
+using namespace std::literals;
+
+
+RequestMap& ParseAddRequst(RequestMap& requsts, const json::Node& node);
+
+RequestMap& ParseGetRequst(RequestMap& requsts, const json::Node& node);
+
+RequestMap ParseJson(std::istream& input, renderer::MapRenderer& map_for_setting);
+
+json::Dict BuildGetBusAnswer(transport_catalogue::TransportCatalogue& catalogue, GetInfo request);
+
+json::Dict BuildGetStopAnswer(transport_catalogue::TransportCatalogue& catalogue, GetInfo request);
+
+transport_catalogue::TransportCatalogue& ProcesAddRequest(RequestMap& requests, transport_catalogue::TransportCatalogue& catalogue);
+
+json::Document ProcesGetRequest(RequestMap& requests, transport_catalogue::TransportCatalogue& catalogue, renderer::MapRenderer& map);
+
+svg::Color ParseColor(const json::Node& color_);
+
+renderer::MapRenderer ParseRenderSetting(const json::Dict& node, renderer::MapRenderer& map_for_setting);
+
+void ProcessJsonRequests(std::istream& input, std::ostream& output);
