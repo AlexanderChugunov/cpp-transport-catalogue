@@ -1,27 +1,34 @@
 #pragma once
 
-#include "json.h"
-#include "transport_catalogue.h"
-#include "map_renderer.h"
+#include"transport_catalogue.h"
+#include"map_renderer.h"
 
-#include <sstream>
+
+
 
 class RequestHandler {
 public:
-    RequestHandler(const transport::TransportCatalogue& catalogue, const renderer::MapRenderer& renderer)
-        : catalogue_(catalogue)
-        , renderer_(renderer)
-    {
-    }
+    // MapRenderer понадобится в следующей части итогового проекта
+    RequestHandler(transport_catalogue::TransportCatalogue& db, renderer::MapRenderer& renderer);
 
-    std::optional<transport::BusInfo> GetBusInfo(const std::string_view bus_number) const;
-    const std::set<std::string> GetBusesByStop(std::string_view stop_name) const;
-    bool IsBusNumber(const std::string_view bus_number) const;
-    bool IsStopName(const std::string_view stop_name) const;
+    
+    std::shared_ptr<transport_catalogue::Bus> GetBusStat(const std::string_view& bus_name) const;
+
+    
+    std::set<std::string_view> GetBusesByStop(const std::string_view& stop_name) const;
 
     svg::Document RenderMap() const;
 
+    void BuildMap();
+
+    
+   
 private:
-    const transport::TransportCatalogue& catalogue_;
-    const renderer::MapRenderer& renderer_;
+    transport_catalogue::TransportCatalogue &db_;
+    renderer::MapRenderer &renderer_;
+
+
+    void BuildBusName(renderer::SphereProjector proj_);
+
+    void BuildStops(std::map<std::string, geo::Coordinates>& stops, renderer::SphereProjector proj_);
 };
