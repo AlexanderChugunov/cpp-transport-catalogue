@@ -1,18 +1,17 @@
 #pragma once
 
+#include <cmath>
+
 namespace geo {
 
-struct Coordinates {
-    double lat; // Широта
-    double lng; // Долгота
-    bool operator==(const Coordinates& other) const {
-        return lat == other.lat && lng == other.lng;
-    }
-    bool operator!=(const Coordinates& other) const {
-        return !(*this == other);
-    }
-};
+    struct Coordinates {
+        double lat = 0.0;
+        double lng = 0.0;
+        bool operator==(const Coordinates& other) const;
+        bool operator!=(const Coordinates& other) const;
+    };
 
-double ComputeDistance(Coordinates from, Coordinates to);
+    double ComputeDistance(Coordinates from, Coordinates to);
 
-}  // namespace geo
+
+} // namespace geo
