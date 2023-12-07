@@ -28,13 +28,13 @@ namespace renderer {
         double underlayer_width = 0.0; // толщина подложки под названиями остановок и маршрутов адаёт значение атрибута stroke - width элемента <text> от 0 до 100000 
         std::vector<svg::Color>  color_palette; // цветовая палитра
     };
-    
+
     class MapRenderer {
     public:
-        
+
         MapRenderer() = default;
 
-        void SetRendSet(const RenderSettings& renderer_data);
+        void SetRenderSettings(const RenderSettings& renderer_data);
 
         std::vector<svg::Polyline> CreateBusLine(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points) const;
 
@@ -43,14 +43,17 @@ namespace renderer {
         std::vector<svg::Circle> CreateStops(const std::map<std::string_view, svg::Point>& stops_on_routes) const;
 
         std::vector<svg::Text> CreateStopsNames(const std::map<std::string_view, svg::Point>& stops_on_routes) const;
-        
-              
+
+        svg::Document RenderMap() const;
+
         const RenderSettings& GetRendSet() const;
 
-        
+        svg::Document Render_Map() const;
+
     private:
         RenderSettings renderer_data_;
-};
+        const transport_base_processing::TransportCatalogue db_;
+    };
 } // namespace render
 
 template <typename DrawableIterator>
