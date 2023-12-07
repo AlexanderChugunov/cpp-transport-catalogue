@@ -64,5 +64,5 @@ const std::set<std::string>* RequestHandler::GetBusesByStop(const std::string_vi
 }
 
 svg::Document RequestHandler::RenderMap() const {
-    return renderer_.Render_Map(/*catalogue_.GetSortedAllBuses()*/);
+    return renderer_.Render_Map();
 }
