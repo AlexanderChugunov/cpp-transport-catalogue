@@ -5,11 +5,11 @@ namespace renderer {
     const RenderSettings& MapRenderer::GetRendSet() const {
         return renderer_data_;
     }
-    
-    void MapRenderer::SetRendSet(const RenderSettings& renderer_data) {
+
+    void MapRenderer::SetRenderSettings(const RenderSettings& renderer_data) {
         renderer_data_ = renderer_data;
     }
-    
+
     std::vector<svg::Polyline> MapRenderer::CreateBusLine(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points) const {
         using namespace svg;
         using namespace std::literals;
@@ -26,17 +26,17 @@ namespace renderer {
                 for (const auto& point : route) {
                     polyline.AddPoint(point);
                 }
-                
-        polyline.SetStrokeColor(renderer_data_.color_palette[color_index]).
-            SetStrokeColor(renderer_data_.color_palette[color_index]).
-            SetStrokeColor(renderer_data_.color_palette[color_index]).
-            SetFillColor("none"s).
-            SetStrokeWidth(renderer_data_.line_width).
-            SetStrokeLineCap(svg::StrokeLineCap::ROUND).
-            SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-            result.push_back(std::move(polyline));
-            ++color_index;
-            if (color_index > max_color_id) color_index = 0;
+
+                polyline.SetStrokeColor(renderer_data_.color_palette[color_index]).
+                    SetStrokeColor(renderer_data_.color_palette[color_index]).
+                    SetStrokeColor(renderer_data_.color_palette[color_index]).
+                    SetFillColor("none"s).
+                    SetStrokeWidth(renderer_data_.line_width).
+                    SetStrokeLineCap(svg::StrokeLineCap::ROUND).
+                    SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+                result.push_back(std::move(polyline));
+                ++color_index;
+                if (color_index > max_color_id) color_index = 0;
             }
         }
         return result;
@@ -67,8 +67,8 @@ namespace renderer {
                     SetStrokeLineCap(svg::StrokeLineCap::ROUND).
                     SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetStrokeColor(renderer_data_.underlayer_color));
                 result.push_back(text);
-                
-                if (*route.begin() == *next(route.end(), -1) && *next(route.begin(), 1) == *next(route.end(), -2) && *route.begin() != *next(route.begin(), + route.size() / 2)) {
+
+                if (*route.begin() == *next(route.end(), -1) && *next(route.begin(), 1) == *next(route.end(), -2) && *route.begin() != *next(route.begin(), +route.size() / 2)) {
                     background.SetPosition(route[route.size() / 2]);
                     result.push_back(background);
                     text.SetPosition(route[route.size() / 2]);
@@ -77,11 +77,11 @@ namespace renderer {
                 ++color_index;
                 if (color_index > max_color_id) color_index = 0;
             }
-           
+
         }
         return result;
     }
-    
+
     std::vector<svg::Circle> MapRenderer::CreateStops(const std::map<std::string_view, svg::Point>& stops_on_routes) const {
         using namespace svg;
         using namespace std::literals;
@@ -119,7 +119,50 @@ namespace renderer {
         }
         return result;
     }
-    
+    svg::Document MapRenderer::Render_Map() const {
+        using transport_base_processing::Bus;
+        using transport_base_processing::Stop;
+        
+        svg::Document result;
+        std::vector<svg::Text> stop_names;// private: std::deque<std::unique_ptr<Object>> objects_;
+        SphereProjector point_corrector(db_.GetCoordCollect().begin(), db_.GetCoordCollect().end(), renderer_data_.width, renderer_data_.height, renderer_data_.padding);
+        std::deque<Bus> all_buses = db_.GetBuses();
+        stop_names.reserve(all_buses.size() * 2);
+        sort(all_buses.begin(), all_buses.end(), [](const Bus& lhs, const Bus& rhs) {return lhs.name < rhs.name; });
+        std::map<std::string_view, std::vector<svg::Point>> route_coords;
+        std::map<std::string_view, svg::Point> stops_on_routes;
+        for (const auto& bus : all_buses) {
+            if (bus.route.empty()) {
+                route_coords[bus.name] = {};
+            }
+            else {
+                for (const Stop* stop : bus.route) {
+                    route_coords[bus.name].reserve(bus.route.size());
+                    route_coords[bus.name].push_back(point_corrector(stop->coordinates));
+                    stops_on_routes[stop->name] = point_corrector(stop->coordinates);
+                }
+
+            }
+
+        }
+
+        for (auto& polyline : CreateBusLine(route_coords)) {
+            result.Add(std::move(polyline));
+        }
+        for (auto& text : CreateRouteNames(route_coords)) {
+            result.Add(std::move(text));
+        }
+        for (auto& stop : CreateStops(stops_on_routes)) {
+            result.Add(std::move(stop));
+        }
+        for (auto& name : CreateStopsNames(stops_on_routes)) {
+            result.Add(std::move(name));
+        }
+
+
+        return result;
+
+    }
 
 }// namespace renderer
 
