@@ -13,7 +13,7 @@ public:
     //}
 
     void JasonStatRequest(const json::Array*, std::ostream& out);
-    
+
     // MapRenderer понадобится в следующей части итогового проекта
     RequestHandler(const transport_base_processing::TransportCatalogue& db, const renderer::MapRenderer& renderer) : db_(db), renderer_(renderer) {
 
