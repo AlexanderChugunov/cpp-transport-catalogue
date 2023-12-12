@@ -20,15 +20,15 @@ json::Document LoadJSON(const std::string& s) {
 */
 int main() {
 	using namespace std;
-    using namespace svg;
-    
-    transport_base_processing::TransportCatalogue base;
+	using namespace svg;
+	
+	transport_base_processing::TransportCatalogue base;
 	json::Document test = json::Load(std::cin);
-	json::JsonBaseProcessing input_json (test);
+	json::JsonBaseProcessing input_json(test);
 	input_json.CreateBase(base);
 	transport_base_processing::MapRenderer map_render;
-	map_render.SetRendSet(input_json.GetRenderSet());
+	map_render.SetRenderSettings(input_json.GetRenderSet());
 	transport_base_processing::RequestHandler requests(base, map_render);
 	Print(input_json.GetStatRequest(requests), std::cout);
-    return 0;
+	return 0;
 }
