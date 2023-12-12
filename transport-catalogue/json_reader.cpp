@@ -1,5 +1,6 @@
 #include "json_reader.h"
 
+
 namespace json {
     using namespace std::literals;
     using transport_base_processing::Stop;
@@ -33,14 +34,60 @@ namespace json {
 
     }
 
-    const renderer::RenderSettings& JsonBaseProcessing::GetRenderSet() const {
+    const transport_base_processing::RenderSettings& JsonBaseProcessing::GetRenderSet() const {
         return render_settings_;
     }
 
-    const Array* JsonBaseProcessing::GetStatRequest() const {
+    Document JsonBaseProcessing::GetStatRequest(const transport_base_processing::RequestHandler handler) const {
         const Dict* data = &document_.GetRoot().AsMap();
         const Array* stat_request = &(*data).at("stat_requests"s).AsArray();
-        return stat_request;
+        Builder document;
+        document.StartArray();
+            for (const auto& request : *stat_request) {
+                const Dict* request_ptr = std::get_if<Dict>(&request.GetValue());
+                std::string_view req_type = (*request_ptr).at("type"s).AsString();
+                document.StartDict().Key("request_id"s).Value((*request_ptr).at("id"s).AsInt());
+                if (req_type == "Stop"sv) {
+                    if (handler.GetBase().FindStop((*request_ptr).at("name"s).AsString()) == nullptr) {
+                        document.Key("error_message"s).Value("not found"s);
+                    }
+                    else {
+                        const auto* set_of_buses = handler.GetBase().GetStopInfo((*request_ptr).at("name"s).AsString());
+                        document.Key("buses"s).StartArray();
+                        if (set_of_buses != nullptr) {
+                            for (const auto bus : *set_of_buses) {
+                                document.Value(bus);
+                            }
+                            
+
+                        }
+                        document.EndArray();
+                    }
+                    
+                }
+                else if (req_type == "Bus"sv) {
+                    std::optional<transport_base_processing::BusInfo> bus_info = handler.GetBase().GetBusInfo((*request_ptr).at("name"s).AsString());
+                    if (!bus_info) {
+                        document.Key("error_message"s).Value("not found"s);
+                    }
+                    else {
+                        document.Key("curvature"s).Value(bus_info.value().curvature)
+                        .Key("route_length"s).Value(double(bus_info.value().route_length))
+                        .Key("stop_count"s).Value(bus_info.value().stops_on_route)
+                        .Key("unique_stop_count"s).Value(bus_info.value().unique_stops);
+
+                    }
+                    
+                }
+                else if (req_type == "Map"sv) {
+                    std::stringstream strm;
+                    handler.RenderMap().Render(strm);
+                    document.Key("map"s).Value(strm.str());
+                    
+                }
+                document.EndDict();
+            }
+            return Document{ document.EndArray().Build() };
     }
 
     std::vector<Stop> JsonBaseProcessing::ParseStopRequests(const Array* data) {
@@ -140,7 +187,7 @@ namespace json {
     }
 
     void JsonBaseProcessing::ParseRenderSettings(const Dict* data) {
-        using namespace renderer;
+        using namespace transport_base_processing;
         render_settings_.width = (*data).at("width"s).AsDouble();
         render_settings_.height = (*data).at("height"s).AsDouble();
         render_settings_.padding = (*data).at("padding"s).AsDouble();
