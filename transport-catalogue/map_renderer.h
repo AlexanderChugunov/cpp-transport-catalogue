@@ -13,7 +13,7 @@
 #include <utility>
 #include <deque>
 
-namespace renderer {
+namespace transport_base_processing {
     struct RenderSettings {
         double width = 0.0; // ширина холста от 0 до 100000
         double height = 0.0; // высота холста от 0 до 100000
@@ -28,48 +28,30 @@ namespace renderer {
         double underlayer_width = 0.0; // толщина подложки под названиями остановок и маршрутов адаёт значение атрибута stroke - width элемента <text> от 0 до 100000 
         std::vector<svg::Color>  color_palette; // цветовая палитра
     };
-
+    
     class MapRenderer {
     public:
-
+        
         MapRenderer() = default;
 
-        void SetRenderSettings(const RenderSettings& renderer_data);
+        void SetRendSet(const RenderSettings& renderer_data);
 
         std::vector<svg::Polyline> CreateBusLine(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points) const;
 
-        std::vector<svg::Text> CreateRouteNames(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points) const;
+        std::vector<svg::Text> CreateRouteNames(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points, const transport_base_processing::TransportCatalogue& db) const;
 
         std::vector<svg::Circle> CreateStops(const std::map<std::string_view, svg::Point>& stops_on_routes) const;
 
         std::vector<svg::Text> CreateStopsNames(const std::map<std::string_view, svg::Point>& stops_on_routes) const;
-
-        svg::Document RenderMap() const;
-
+        
+              
         const RenderSettings& GetRendSet() const;
 
-        svg::Document Render_Map() const;
-
+        
     private:
         RenderSettings renderer_data_;
-        const transport_base_processing::TransportCatalogue db_;
-    };
-} // namespace render
-
-template <typename DrawableIterator>
-void DrawPicture(DrawableIterator begin, DrawableIterator end, svg::ObjectContainer& target) {
-    for (auto it = begin; it != end; ++it) {
-        (*it)->Draw(target);
-    }
-}
-
-template <typename Container>
-void DrawPicture(const Container& container, svg::ObjectContainer& target) {
-    using namespace std;
-    DrawPicture(begin(container), end(container), target);
-}
-
-
+};
+} // namespace transport_base_processing
 
 bool IsZero(double value);
 
