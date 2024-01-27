@@ -1,6 +1,5 @@
 #include "json_reader.h"
 
-
 namespace json {
     using namespace std::literals;
     using transport_base_processing::Stop;
@@ -11,6 +10,9 @@ namespace json {
         
         const Dict* render_settings = &(*data).at("render_settings"s).AsMap();
         ParseRenderSettings(render_settings);
+
+        const Dict* routing_settings = &(*data).at("routing_settings"s).AsMap();
+        ParseRoutingSettings(routing_settings, base);
         
         const Array* base_request = &(*data).at("base_requests"s).AsArray();
         std::vector<Stop> stops_to_add = std::move(ParseStopRequests(base_request));
@@ -29,15 +31,12 @@ namespace json {
         for (Bus& bus : bases_to_add) {
            base.AddBus(std::move(bus));
         }
-
-        
-
     }
 
     const transport_base_processing::RenderSettings& JsonBaseProcessing::GetRenderSet() const {
         return render_settings_;
     }
-
+    
     Document JsonBaseProcessing::GetStatRequest(const transport_base_processing::RequestHandler handler) const {
         const Dict* data = &document_.GetRoot().AsMap();
         const Array* stat_request = &(*data).at("stat_requests"s).AsArray();
@@ -55,7 +54,7 @@ namespace json {
                         const auto* set_of_buses = handler.GetBase().GetStopInfo((*request_ptr).at("name"s).AsString());
                         document.Key("buses"s).StartArray();
                         if (set_of_buses != nullptr) {
-                            for (const auto bus : *set_of_buses) {
+                            for (const auto & bus : *set_of_buses) {
                                 document.Value(bus);
                             }
                             
@@ -85,6 +84,33 @@ namespace json {
                     document.Key("map"s).Value(strm.str());
                     
                 }
+                else if (req_type == "Route") {
+                    std::string_view from = (*request_ptr).at("from"s).AsString();
+                    std::string_view to = (*request_ptr).at("to"s).AsString();
+                    std::optional<graph::Router<double>::RouteInfo> route_info = handler.BuildRoute(from, to);
+                    if (route_info) {
+                        document.Key("total_time"s).Value(route_info.value().weight);
+                        document.Key("items"s).StartArray();
+                        for (auto id : route_info.value().edges) {
+                            document.StartDict();
+                            const auto& [stop_from, stop_to, weight] = handler.GetTransportGraph().GetGraph().GetEdge(id);
+                            document.Key("stop_name"s).Value(handler.GetBase().GetStops()[stop_from].name)
+                                .Key("time"s).Value(handler.GetBase().GetWaitVelocityInfo().first)
+                                .Key("type"s).Value("Wait"s)
+                                .EndDict()
+                                .StartDict()
+                                .Key("bus"s).Value(std::string(handler.GetTransportGraph().GetEdgeInfo()[id].bus_name))
+                                .Key("span_count"s).Value(handler.GetTransportGraph().GetEdgeInfo()[id].spans)
+                                .Key("time"s).Value(weight - handler.GetBase().GetWaitVelocityInfo().first)
+                                .Key("type"s).Value("Bus"s)
+                                .EndDict();
+                        }
+                        document.EndArray();
+                    }
+                    else {
+                        document.Key("error_message"s).Value("not found"s);
+                    }
+                }
                 document.EndDict();
             }
             return Document{ document.EndArray().Build() };
@@ -92,6 +118,7 @@ namespace json {
 
     std::vector<Stop> JsonBaseProcessing::ParseStopRequests(const Array* data) {
         std::vector<Stop> stops_to_add;
+        static size_t stop_id = 0;
         for (const auto& request_in_collection : *data) {
             const Dict* request = &request_in_collection.AsMap();
             if ((*request).at("type"s).AsString() != "Stop"s) {
@@ -102,6 +129,7 @@ namespace json {
                 stop.name = (*request).at("name"s).AsString();
                 stop.coordinates.lat = (*request).at("latitude"s).AsDouble();
                 stop.coordinates.lng = (*request).at("longitude"s).AsDouble();
+                stop.id = stop_id++;
                 if ((*request).count("road_distances"s) != 0) {
                     const Dict* stops_distance_info = &(*request).at("road_distances"s).AsMap();
                     for (const auto& [stop_name, dist] : *stops_distance_info) {
@@ -204,6 +232,11 @@ namespace json {
         for (Node color : (*data).at("color_palette"s).AsArray()) {
             render_settings_.color_palette.push_back(ParseColor(color));
         } 
+    }
+
+    void JsonBaseProcessing::ParseRoutingSettings(const Dict* data, transport_base_processing::TransportCatalogue& base) {
+        base.SetBusWaitTime((*data).at("bus_wait_time"s).AsInt());
+        base.SetBusVelocity((*data).at("bus_velocity"s).AsDouble());
     }
 
    
