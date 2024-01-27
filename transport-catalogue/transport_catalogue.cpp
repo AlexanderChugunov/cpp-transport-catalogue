@@ -76,8 +76,8 @@ namespace transport_base_processing {
         return stopname_to_stop;
     }
 
-    const TransportCatalogue::DistanceInfo& TransportCatalogue::GetDistanceCollection() const {
-        return stops_to_distance;
+    const TransportCatalogue::RouteLength& TransportCatalogue::GetDistanceCollection() const {
+        return stop_to_distance;
     }
 
     void TransportCatalogue::CountDistances(std::string_view stop) {
@@ -132,6 +132,19 @@ namespace transport_base_processing {
             return nullptr;
         }
         return &stopname_to_bus.at(stop);
+    }
+
+    void TransportCatalogue::SetBusWaitTime(unsigned short int time) {
+        bus_wait_time = time;
+    }
+    void TransportCatalogue::SetBusVelocity(double speed) {
+        const int meters_in_km = 1000;
+        const int sec_in_min = 60;
+        bus_velocity = speed * meters_in_km / sec_in_min;
+    }
+
+    std::pair<unsigned short int, double> TransportCatalogue::GetWaitVelocityInfo() const {
+        return { bus_wait_time, bus_velocity };
     }
 
     std::ostream& operator<<(std::ostream& out, const BusInfo& info) {
