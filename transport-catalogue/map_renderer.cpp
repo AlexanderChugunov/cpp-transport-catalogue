@@ -5,11 +5,11 @@ namespace transport_base_processing {
     const RenderSettings& MapRenderer::GetRendSet() const {
         return renderer_data_;
     }
-
-    void MapRenderer::SetRenderSettings(const RenderSettings& renderer_data) {
+    
+    void MapRenderer::SetRendSet(const RenderSettings& renderer_data) {
         renderer_data_ = renderer_data;
     }
-
+    
     std::vector<svg::Polyline> MapRenderer::CreateBusLine(const std::map<std::string_view, std::vector<svg::Point>>& bus_route_points) const {
         using namespace svg;
         using namespace std::literals;
@@ -26,17 +26,17 @@ namespace transport_base_processing {
                 for (const auto& point : route) {
                     polyline.AddPoint(point);
                 }
-
-                polyline.SetStrokeColor(renderer_data_.color_palette[color_index]).
-                    SetStrokeColor(renderer_data_.color_palette[color_index]).
-                    SetStrokeColor(renderer_data_.color_palette[color_index]).
-                    SetFillColor("none"s).
-                    SetStrokeWidth(renderer_data_.line_width).
-                    SetStrokeLineCap(svg::StrokeLineCap::ROUND).
-                    SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-                result.push_back(std::move(polyline));
-                ++color_index;
-                if (color_index > max_color_id) color_index = 0;
+                
+        polyline.SetStrokeColor(renderer_data_.color_palette[color_index]).
+            SetStrokeColor(renderer_data_.color_palette[color_index]).
+            SetStrokeColor(renderer_data_.color_palette[color_index]).
+            SetFillColor("none"s).
+            SetStrokeWidth(renderer_data_.line_width).
+            SetStrokeLineCap(svg::StrokeLineCap::ROUND).
+            SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+            result.push_back(std::move(polyline));
+            ++color_index;
+            if (color_index > max_color_id) color_index = 0;
             }
         }
         return result;
@@ -67,7 +67,7 @@ namespace transport_base_processing {
                     SetStrokeLineCap(svg::StrokeLineCap::ROUND).
                     SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetStrokeColor(renderer_data_.underlayer_color));
                 result.push_back(text);
-                if (db.FindBus(bus)->is_circle == false && *route.begin() != *next(route.begin(), +route.size() / 2)) {
+                if(db.FindBus(bus) -> is_circle == false && *route.begin() != *next(route.begin(), +route.size() / 2)) {
                     background.SetPosition(route[route.size() / 2]);
                     result.push_back(background);
                     text.SetPosition(route[route.size() / 2]);
@@ -76,11 +76,11 @@ namespace transport_base_processing {
                 ++color_index;
                 if (color_index > max_color_id) color_index = 0;
             }
-
+           
         }
         return result;
     }
-
+    
     std::vector<svg::Circle> MapRenderer::CreateStops(const std::map<std::string_view, svg::Point>& stops_on_routes) const {
         using namespace svg;
         using namespace std::literals;
@@ -118,7 +118,7 @@ namespace transport_base_processing {
         }
         return result;
     }
-
+    
 
 }// namespace transport_base_processing
 
